@@ -1,0 +1,68 @@
+** Webserv Documentation **
+
+Documentation to read:
+1. How to set up a HTTP server from scrach - https://osasazamegbe.medium.com/showing-building-an-http-server-from-scratch-in-c-2da7c0db6cb7
+2. Information about HTTP and web in general - https://developer.mozilla.org/en-US/docs/Web/HTTP
+
+
+Functions: 
+* strerror() - takes an error number and retruns a humanly readable string about system related errors using 'errno'.
+char* strerror(int errnum);
+
+* gai_strerror() - almost the same as strerror but specific to netweord related errors indicated by EAI_ error code.
+const char* gai_strerror(int errcode);
+
+* errno - is an external int veriable, holds the error code of the last error.
+
+* socketpair() - creates a pair of connected sockets, allows communication between processes through these sockets.
+int socketpair(int domain, int type, int protocol, int sv[2]);
+- domain: communication domain for socket. AF_UNIX for local, AF_INET for network communication.
+- type: type of socket. Search the macros but SOCK_STREAM is recommended.
+- protocal: protocal used by sockets. 0 will automatically select the appropriate protocal.
+- sv[2]: the file descriptors of the sockets will fill this array.
+-- success 0 is return, failure -1 is returned --
+
+* socket() - create a new communication endpoint, socket.
+int socket(int domain, int type, int protocol);
+- works very simular to sockpair();
+
+(The difference between the two is that the pair is used for inter-process communication, much like a pipe I'm guessing.
+The single socket just creates an end point to communicate with other processes or systems over a network)
+
+* htons() - (host to network short) converts the port number a 16bit unsigned short int to the network byte order.
+uint16_t htons(uint16_t hostshort);
+
+* htonl() - same but for long.
+
+* accept() - when the server is in listening state this function accpets client connections
+int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+- sockfd: file dscriptor of the socket.
+- addr: same struct as bind, this one is empty and will recieve the client address information, if not needed NULL.
+- addrlen: pointer to socklen_t veriable indicating the size of the previous parameter (addr).
+
+* listen() - used to make a bound socket enter a listening state, allows to accept connections from clients.
+int listen(int sockfd, int backlog);
+- sockfd: file dscriptor of the socket.
+- backlog: the maximum number of incoming connections that can be queued.
+-- success returns 0, failure returns -1 --
+
+...
+
+* getaddrinfo() - converts a humanly readable hostname or service name to a numberic address.
+int getaddrinfo(const char* node, const char* service, const struct addrinfo* hints, struct addrinfo** res);
+- node: a c string of the hostname or IP.
+- service: a c string of a port or service (http, ftp).
+- optional, can give hints to the type of stuct you want to recieve.
+- pointer to linked list of struct addreinfo
+
+* bind() - it is used to associate a socket with a sepcific address and port. binding allows clients to connect.
+int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+- sockfd: file dscriptor of the socket.
+- addr: the sockaddr struct is an existing structure in <netinet/in.h>. the parameter is usually either struct sockaddr_in for IPv4 or
+struct sockaddr_in6 for IPv6, then it is cast with (struct sockaddr*), this is to maintain a common interface.
+- addrlen: is the length in bytes, use sizeof() on whichever sockaddr you choose to use.
+
+** Steps **
+
+1.
+To communicate the server has to listen for communcation, for this it needs a socket, a socket then needs to bind to a port and an IP.

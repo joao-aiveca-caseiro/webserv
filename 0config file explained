@@ -1,0 +1,67 @@
+
+// A server block contains the minimum set of rules necessary to handle requests made to that host:port combination.
+// The mandatory fields are: host, listen, and also a "/" location block with a root.
+server {
+    // The IP address used to connect to the server. In this case, it must belong to the loopback address range (127.X.X.X)
+	host 127.0.0.1; 
+	 // The server will listen to incoming requests on this port.
+	listen 8080;
+	// An alternative way to identify the server, for use with utilities such as "curl --resolve";
+	// In that case, it will overwrite the "host" attribute of the request, which will be served only if the IP and port match this server's;
+	server_name example.com; 
+	// The maximum size in bytes of the body of a request. For example, when uploading a file that surpasses this value, 
+	// the error 413 Payload Too Large will be returned;							
+    client_max_body_size 50000000;
+	// An error response code and the path to its respective error page. The path refers to a local file and is relative to the root of the "/" location.
+	// You can add extra "error_page" lines to specify pages for other error codes.
+	error_page 404 ../DefaultError/501.html;
+
+	// A location block contains information relevant to all requests with an URL matching that location path, unless a more specific one is also present in the file
+	// For example, a request for /cgi-bin/uploads/file.png follows the rules of the /cgi-bin location block, unless a /cgi-bin/uploads block is also present
+	// The path for a location must start with "/"
+    location /js {
+		// The allowed request methods for this location. You can only have one "allow" and "deny" line per location,
+		// but the same method can appear on both, in which case its last declaration takes precedence.
+		// If one or more methods are not explicitly allowed or denied on a location, the server will look for them on the parent location.
+        allow GET POST;
+    }
+
+    location /images {
+        allow GET POST;
+		// The local path for this location's index page - the default page to be served when the request's URL matches the location's path.
+		// It's relative to the location's root path; If none is specified, this path will be relative to the root for the "/" location + this location's path. 
+        index ../../DefaultError/500.html;
+        // Also called directory listing - this feature will show a list view of the location root's contents.
+		// If no root is specified on this location, the same rules as above apply. 
+		// The autoindex is off by default, and when the "index" attribute exists, the latter takes precedence.
+		autoindex on;
+    }
+
+    location /cgi-bin {
+        allow GET POST DELETE;
+		// If a request is made for a file matching this extension, it will be parsed through the server's Common Gateway Interface (CGI).
+        cgi .py;
+    }
+
+    location / {
+		// This indicates the folder from which to search locally for the files to serve. It replaces the location path when building the file's absolute path.
+		// For example, on an "/example" location with a "/folder/subfolder" root, a request for "example/file.txt" will serve the file "/folder/subfolder/file.txt"
+        root /guarder-html;
+        index /index.html;
+        allow GET;
+    }
+
+    location /css {
+        allow GET;
+		// Creates a redirection to another resource, meaning that instead of serving the requested resource, the response will generate 
+		// a new request with the path specified below. This is a request path (part of a URL) and not a local path.
+        return /403.html;
+    }
+
+    location /cgi-bin/uploads {
+        allow GET POST;
+        root /guarder-html/cgi-bin/uploads;
+        autoindex on;
+        deny DELETE;
+    }
+}
